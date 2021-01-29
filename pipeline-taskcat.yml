@@ -18,7 +18,7 @@ Parameters:
     NoEcho: true
     Type: String
     Default: '{{resolve:secretsmanager:github/personal-access-token:SecretString}}'
-    Description: GitHub Token. Must be defined in AWS Secrets Manager and here https://github.com/settings/tokens
+    Description: Secret. It might look something like 9b189a1654643522561f7b3ebd44a1531a4287af OAuthToken with access to Repo. Go to https://github.com/settings/tokens
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -103,72 +103,23 @@ Resources:
         PolicyDocument:
           Statement:
           - Action:
-            - apigateway:*
-            - cloudformation:*
-            - cloudwatch:*
-            - cloudtrail:*
-            - codebuild:*
-            - codecommit:*
-            - codepipeline:*
-            - config:*
-            - dynamodb:*
-            - ec2:*
-            - iam:*
-            - kms:*
-            - lambda:*
             - logs:*
-            - redshift:*
-            - rds:*
-            - secretsmanager:*
+            - lambda:*
+            - cloudwatch:*
+            - codebuild:*
             - s3:*
-            - sns:*
+            - cloudformation:*
+            - ec2:*
+            - dynamodb:*
             - sqs:*
             Effect: Allow
             Resource: "*"
           Version: '2012-10-17'
-  CodeBuildSetup:
+  CodeBuildTest:
     Type: AWS::CodeBuild::Project
     DependsOn: CodeBuildRole
     Properties:
-      Description: Setup Test Files. For example uploading to S3
-      ServiceRole: !GetAtt CodeBuildRole.Arn
-      Artifacts:
-        Type: NO_ARTIFACTS
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
-        EnvironmentVariables:
-          - Name: PIPELINE_BUCKET
-            Type: PLAINTEXT
-            Value:
-              Fn::Sub: ${PipelineBucket}
-      Source:
-        Type: GITHUB
-        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}.git
-        BuildSpec: buildspec-setup.yml
-      TimeoutInMinutes: 10
-  CodeBuildCleanup:
-    Type: AWS::CodeBuild::Project
-    DependsOn: CodeBuildRole
-    Properties:
-      Description: Setup Test Files. For example uploading to S3
-      ServiceRole: !GetAtt CodeBuildRole.Arn
-      Artifacts:
-        Type: NO_ARTIFACTS
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
-      Source:
-        Type: GITHUB
-        Location: !Sub https://github.com/${GitHubUser}/${GitHubRepo}.git
-        BuildSpec: buildspec-cleanup.yml
-      TimeoutInMinutes: 10
-  CodeBuildTaskCatTest:
-    Type: AWS::CodeBuild::Project
-    DependsOn: CodeBuildRole
-    Properties:
+      Name: !Sub ceoa-${AWS::StackName}
       Description: Run TaskCat
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
@@ -176,14 +127,15 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:1.0"
       Source:
         Type: CODEPIPELINE
-      TimeoutInMinutes: 60
-  CodeBuildDashboard:
+      TimeoutInMinutes: 10
+  CodeBuildWebsite:
     Type: AWS::CodeBuild::Project
     DependsOn: CodeBuildRole
     Properties:
+      Name: !Sub ${AWS::StackName}-DeploySite
       Description: Deploy site to S3
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
@@ -191,7 +143,7 @@ Resources:
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:1.0"
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub |
@@ -237,20 +189,6 @@ Resources:
         Actions:
         - InputArtifacts:
           - Name: SourceArtifacts
-          Name: Setup
-          ActionTypeId:
-            Category: Test
-            Owner: AWS
-            Version: '1'
-            Provider: CodeBuild
-          OutputArtifacts: 
-          - Name: SetupArtifacts
-          Configuration:
-            ProjectName:
-              Ref: CodeBuildSetup
-          RunOrder: 1
-        - InputArtifacts:
-          - Name: SetupArtifacts
           Name: RunTaskCat
           ActionTypeId:
             Category: Test
@@ -261,8 +199,8 @@ Resources:
           - Name: TaskCatArtifacts
           Configuration:
             ProjectName:
-              Ref: CodeBuildTaskCatTest
-          RunOrder: 10
+              Ref: CodeBuildTest
+          RunOrder: 1
         - InputArtifacts:
           - Name: TaskCatArtifacts
           Name: TaskCatDashboard
@@ -274,23 +212,8 @@ Resources:
           OutputArtifacts: [] 
           Configuration:
             ProjectName:
-              Ref: CodeBuildDashboard
-          RunOrder: 20
-      - Name: Cleanup
-        Actions:
-        - InputArtifacts:
-          - Name: SourceArtifacts
-          Name: RemoveS3Buckets
-          ActionTypeId:
-            Category: Test
-            Owner: AWS
-            Version: '1'
-            Provider: CodeBuild
-          OutputArtifacts: []
-          Configuration:
-            ProjectName:
-              Ref: CodeBuildCleanup
-          RunOrder: 1
+              Ref: CodeBuildWebsite
+          RunOrder: 2
       ArtifactStore:
         Type: S3
         Location: !Ref PipelineBucket
