@@ -25,7 +25,9 @@ Clone Repository Into Your Cloud9 Server
 ----------------------------------------
 
 cd ~/environment
+
 git clone https://github.com/YOURGITHUBUSERID/taskcat-example.git
+
 cd taskcat-example
 
 
@@ -35,14 +37,23 @@ In order for CodePipeline to use GitHub as a source provider it needs your GitHu
 
 
 1.Go to the AWS Secrets Manager Console.
+
 2.Click Secrets and click the Store a new secret button.
+
 3.Click on the Other type of secrets radio button.
+
 4.Click on the Plaintext tab and enter the GitHub token value in the text area. You can get this token by going to Personal access tokens and creating one or using an existing token. To create a GitHub token, see the instructions here.
+
 5.Leave the Select the encryption key dropdown with the DefaultEncryptionKey option selected.
+
 6.Click the Next button.
+
 7.Enter github/personal-access-token for the Secret name and description on the Secret name and description page and click Next.
+
 8.On the Configure automatic rotation page, select the Disable automatic rotation radio button.
+
 9.Click the Next button.
+
 10.On the Review page, click the Store button.
 
 
