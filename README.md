@@ -6,11 +6,17 @@ Install Python and TaskCat
 TaskCat uses Python 3 so you will need to install Python, pip (the package installer for Python), and TaskCat via pip in AWS Cloud9.
 
 cd ~/environment
+
 sudo yum -y update
+
 python --version
+
 curl -O https://bootstrap.pypa.io/get-pip.py
+
 python3 get-pip.py --user
+
 sudo pip install --upgrade pip
+
 pip3 install taskcat --user
 
 taskcat --version
