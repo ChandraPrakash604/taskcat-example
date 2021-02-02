@@ -59,7 +59,7 @@ In order for CodePipeline to use GitHub as a source provider it needs your GitHu
 
 Note:
 ----
-There are a few things to note in this CloudFormation template. The default value for the GitHubToken parameter is configured and maintained in pipeline-taskcat.yml as shown below. This assumes that you created the secrets in AWS Secrets Manager and used the name github/personal-access-token. If you have not, you will need to make changes for the CloudFormation template to work.Also change github user name <GitHubUser> in pipeline-taskcat.yml to your account.
+There are a few things to note in this CloudFormation template. The default value for the GitHubToken parameter is configured and maintained in pipeline-taskcat.yml as shown below. This assumes that you created the secrets in AWS Secrets Manager and used the name github/personal-access-token. If you have not, you will need to make changes for the CloudFormation template to work.Also change github user name in pipeline-taskcat.yml to your account.
 
 Default: '{{resolve:secretsmanager:github/personal-access-token:SecretString}}'
 
@@ -67,7 +67,7 @@ Default: '{{resolve:secretsmanager:github/personal-access-token:SecretString}}'
  Launch the Stack
  ----------------
  
-aws cloudformation create-stack --stack-name pipeline-taskcat --capabilities CAPABILITY_NAMED_IAM --disable-rollback --template-body file:///home/ec2-user/environment/taskcat-example/pipeline-taskcat.yml --parameters ParameterKey=GitHubUser,ParameterValue=<YOURGITHUBUSERID> ParameterKey=GitHubRepo,ParameterValue=taskcat-example
+aws cloudformation create-stack --stack-name pipeline-taskcat --capabilities CAPABILITY_NAMED_IAM --disable-rollback --template-body file:///home/ec2-user/environment/taskcat-example/pipeline-taskcat.yml --parameters ParameterKey=GitHubUser,ParameterValue=YOURGITHUBUSERID ParameterKey=GitHubRepo,ParameterValue=taskcat-example
  
  
  
